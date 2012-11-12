@@ -1,7 +1,7 @@
 from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
-from fabric.api import task
+from fabric.api import task, run
 from node import Node
 import time
 import json
@@ -101,6 +101,7 @@ def _addNode(node):
     config['nodes'].append(node.to_dict())
 
     fh = open('config.json','w')
-    blob = json.dumps(config)
+    blob = json.dumps(config, sort_keys=True, indent=4)
     fh.write(blob)
     fh.close()
+
