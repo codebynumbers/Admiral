@@ -1,9 +1,12 @@
-class Node:
+class Node():
     """ Object representing an EC2 node """
+
+    # list of job names
+    jobs = []
 
     def __init__(self, name, id, image_id, key_name, zone,
             instance_type, dns_name, private_dns_name,
-            ip_address, private_ip_address):
+            ip_address, private_ip_address, job=None):
 
         self.name = name
         self.id = id
@@ -15,7 +18,8 @@ class Node:
         self.private_dns_name = private_dns_name
         self.ip_address = ip_address
         self.private_ip_address = private_ip_address
-            
+        if job:
+            self.add_job(job)
 
     def to_dict(self):
         return {
@@ -28,5 +32,11 @@ class Node:
             'dns_name': self.dns_name,
             'private_dns_name': self.private_dns_name,
             'ip_address': self.ip_address,
-            'private_ip_address': self.private_ip_address
+            'private_ip_address': self.private_ip_address,
+            'jobs': self.jobs
         }            
+
+
+    def add_job(self, job):
+        if job not in self.jobs:
+            self.jobs.append(job)

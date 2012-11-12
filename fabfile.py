@@ -1,12 +1,14 @@
 from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
+from fabric.api import task
 from node import Node
 import time
 import json
+import pprint
 
-
-def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', zone='us-east-1d', security_group='quicklaunch-1'):
+@task
+def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', zone='us-east-1d', security_group='quicklaunch-1', job=None):
     '''Launch a single instance of the provided ami '''
     conn = EC2Connection()
     # Declare the block device mapping for ephemeral disks
@@ -42,28 +44,51 @@ def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2
         print('Instance status: ' + status)
         return
 
-def mockLaunch():
+@task
+def mockLaunch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', zone='us-east-1d', security_group='quicklaunch-1', job=None):
+    """ Simulate a node launch for dev purposes """
 
     i = {
-         'key_name': u'amazon2',
+         'name': name,
+         'key_name': key_name,
          'public_dns_name': u'ec2-107-21-159-143.compute-1.amazonaws.com',
          'ip_address': u'107.21.159.143',
          'private_dns_name': u'ip-10-29-6-45.ec2.internal',
          'id': u'i-e2a5559d',
-         'image_id': u'ami-3d4ff254',
-         '_placement': 'us-east-1d',
+         'image_id': ami,
+         '_placement': zone,
          'dns_name': u'ec2-107-21-159-143.compute-1.amazonaws.com',
-         'instance_type': u't1.micro',
+         'instance_type': instance_type,
          'private_ip_address': u'10.29.6.45',
+         'jobs':job
         }
-        
-    n = Node('test', i['id'], i['image_id'], i['key_name'], i['_placement'],
-            i['instance_type'], i['dns_name'], i['private_dns_name'],
-            i['ip_address'], i['private_ip_address'])
 
-    print n.to_dict()
+    n = Node(i['name'], i['id'], i['image_id'], i['key_name'], i['_placement'],
+            i['instance_type'], i['dns_name'], i['private_dns_name'],
+            i['ip_address'], i['private_ip_address'], job)
+
+    pprint.pprint(n.to_dict())
     _addNode(n)
 
+
+@task
+def listNodes():
+    """ List configured nodes """
+    config = {}
+    try:
+        fh = open('config.json','r')
+        config = json.loads(fh.read())
+        fh.close()
+    except:
+        config['nodes'] = []
+
+    for node in config['nodes']:
+        print node['name'], node['ip_address'], node['jobs']    
+
+
+#
+# Utility methods - move these to own modules later
+#
 def _addNode(node):
     config = {}
     try:
@@ -79,17 +104,3 @@ def _addNode(node):
     blob = json.dumps(config)
     fh.write(blob)
     fh.close()
-
-
-def listNodes():
-    config = {}
-    try:
-        fh = open('config.json','r')
-        config = json.loads(fh.read())
-        fh.close()
-    except:
-        config['nodes'] = []
-
-    for node in config['nodes']:
-        print node['name']    
-
