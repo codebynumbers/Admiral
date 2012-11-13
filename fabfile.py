@@ -3,7 +3,7 @@ from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
 from fabric.api import env, task, run, settings, sudo
 from node import Node
-from web_job import WebJob
+from jobs import *
 import time
 import json
 import pprint
@@ -101,12 +101,13 @@ def addJob(name, job):
         node['jobs'].append(job)
     updateConfig(name, node)
 
-    if job == 'web':
+    for job in node['jobs']:
         # Need to run ssh-add ~/.ssh/somekey.pem for the below to work
         # TODO - need to store login with node
         with settings(host_string='ubuntu@%s' % node['ip_address']):
-            wj = WebJob()    
-            wj.run()
+            # There's probably a nicer way to do this
+            jobrunner = globals()[job]()
+            jobrunner.run()
 
 
 #
