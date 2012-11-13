@@ -3,6 +3,7 @@ from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
 from fabric.api import task, run
 from node import Node
+from web_job import WebJob
 import time
 import json
 import pprint
@@ -38,8 +39,14 @@ def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2
         print('New instance "' + instance.id + '" accessible at ' + instance.public_dns_name)
         # Name the instance
         conn.create_tags([instance.id], {'Name': name})
-        print json.dumps(instance.__dict__)
-        
+
+        n = Node(name, instance.id, instance.image_id, instance.key_name, instance.placement,
+                instance.instance_type, instance.dns_name, instance.private_dns_name,
+                instance.ip_address, instance.private_ip_address, job)
+    
+        pprint.pprint(n.to_dict())
+        _addNode(n)
+    
     else:
         print('Instance status: ' + status)
         return
@@ -56,14 +63,14 @@ def mockLaunch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='ama
          'private_dns_name': u'ip-10-29-6-45.ec2.internal',
          'id': u'i-e2a5559d',
          'image_id': ami,
-         '_placement': zone,
+         'placement': zone,
          'dns_name': u'ec2-107-21-159-143.compute-1.amazonaws.com',
          'instance_type': instance_type,
          'private_ip_address': u'10.29.6.45',
          'jobs':job
         }
 
-    n = Node(i['name'], i['id'], i['image_id'], i['key_name'], i['_placement'],
+    n = Node(i['name'], i['id'], i['image_id'], i['key_name'], i['placement'],
             i['instance_type'], i['dns_name'], i['private_dns_name'],
             i['ip_address'], i['private_ip_address'], job)
 

@@ -1,0 +1,17 @@
+{
+    "nodes": [
+        {
+            "dns_name": "ec2-23-20-223-191.compute-1.amazonaws.com", 
+            "id": "i-44ae6b3b", 
+            "image_id": "ami-3d4ff254", 
+            "instance_type": "t1.micro", 
+            "ip_address": "23.20.223.191", 
+            "jobs": [], 
+            "key_name": "amazon2", 
+            "name": "webtest6", 
+            "private_dns_name": "ip-10-159-55-218.ec2.internal", 
+            "private_ip_address": "10.159.55.218", 
+            "zone": "us-east-1d"
+        }
+    ]
+}
