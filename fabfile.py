@@ -1,12 +1,13 @@
 from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
-from fabric.api import task, run
+from fabric.api import env, task, run, settings, sudo
 from node import Node
 from web_job import WebJob
 import time
 import json
 import pprint
+
 
 @task
 def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', zone='us-east-1d', security_group='quicklaunch-1', job=None):
@@ -45,7 +46,7 @@ def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2
                 instance.ip_address, instance.private_ip_address, job)
     
         pprint.pprint(n.to_dict())
-        _addNode(n)
+        addNode(n)
     
     else:
         print('Instance status: ' + status)
@@ -75,7 +76,7 @@ def mockLaunch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='ama
             i['ip_address'], i['private_ip_address'], job)
 
     pprint.pprint(n.to_dict())
-    _addNode(n)
+    addNode(n)
 
 
 @task
@@ -93,10 +94,37 @@ def listNodes():
         print node['name'], node['ip_address'], node['jobs']    
 
 
+@task
+def addJob(name, job):
+    node = findNode(name)
+    if job not in node['jobs']:
+        node['jobs'].append(job)
+    updateConfig(name, node)
+
+    if job == 'web':
+        # Need to run ssh-add ~/.ssh/somekey.pem for the below to work
+        # TODO - need to store login with node
+        with settings(host_string='ubuntu@%s' % node['ip_address']):
+            wj = WebJob()    
+            wj.run()
+
+
 #
 # Utility methods - move these to own modules later
 #
-def _addNode(node):
+def addNode(node):
+    config = loadConfig()
+    config['nodes'].append(node.to_dict())
+    
+
+def findNode(name):
+    config = loadConfig()
+    for node in config['nodes']:
+        if node['name'] == name:
+            return node
+
+
+def loadConfig():
     config = {}
     try:
         fh = open('config.json','r')
@@ -104,11 +132,24 @@ def _addNode(node):
         fh.close()
     except:
         config['nodes'] = []
+    return config
 
-    config['nodes'].append(node.to_dict())
 
+def saveConfig(config):
     fh = open('config.json','w')
     blob = json.dumps(config, sort_keys=True, indent=4)
     fh.write(blob)
     fh.close()
 
+
+# this is dumb, I already want a better data structure, keyed by name or id
+def updateConfig(name, node):
+    config = loadConfig()
+    nodes = []
+    for n in config['nodes']:
+        if n['name'] == name:
+            nodes.append(node)
+        else:
+            nodes.append(n)
+    config['nodes'] = nodes
+    saveConfig(config)

@@ -6,7 +6,9 @@
             "image_id": "ami-3d4ff254", 
             "instance_type": "t1.micro", 
             "ip_address": "23.20.223.191", 
-            "jobs": [], 
+            "jobs": [
+                "web"
+            ], 
             "key_name": "amazon2", 
             "name": "webtest6", 
             "private_dns_name": "ip-10-159-55-218.ec2.internal", 
