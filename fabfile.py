@@ -10,7 +10,8 @@ import pprint
 
 
 @task
-def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', zone='us-east-1d', security_group='quicklaunch-1', job=None):
+def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', 
+           zone='us-east-1d', security_group='quicklaunch-1', user='ubuntu', job=None):
     '''Launch a single instance of the provided ami '''
     conn = EC2Connection()
     # Declare the block device mapping for ephemeral disks
@@ -43,7 +44,7 @@ def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2
 
         n = Node(name, instance.id, instance.image_id, instance.key_name, instance.placement,
                 instance.instance_type, instance.dns_name, instance.private_dns_name,
-                instance.ip_address, instance.private_ip_address, job)
+                instance.ip_address, instance.private_ip_address, user, job)
     
         pprint.pprint(n.to_dict())
         addNode(n)
@@ -68,12 +69,13 @@ def mockLaunch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='ama
          'dns_name': u'ec2-107-21-159-143.compute-1.amazonaws.com',
          'instance_type': instance_type,
          'private_ip_address': u'10.29.6.45',
+         'user':user,
          'jobs':job
         }
 
     n = Node(i['name'], i['id'], i['image_id'], i['key_name'], i['placement'],
             i['instance_type'], i['dns_name'], i['private_dns_name'],
-            i['ip_address'], i['private_ip_address'], job)
+            i['ip_address'], i['private_ip_address'], i['user'], job)
 
     pprint.pprint(n.to_dict())
     addNode(n)
@@ -104,7 +106,7 @@ def addJob(name, job):
     for job in node['jobs']:
         # Need to run ssh-add ~/.ssh/somekey.pem for the below to work
         # TODO - need to store login with node
-        with settings(host_string='ubuntu@%s' % node['ip_address']):
+        with settings(host_string='%s@%s' % node['user'], node['ip_address'])):
             # There's probably a nicer way to do this
             jobrunner = globals()[job]()
             jobrunner.run()

@@ -6,7 +6,7 @@ class Node():
 
     def __init__(self, name, id, image_id, key_name, zone,
             instance_type, dns_name, private_dns_name,
-            ip_address, private_ip_address, job=None):
+            ip_address, private_ip_address, user, job=None):
 
         self.name = name
         self.id = id
@@ -18,6 +18,7 @@ class Node():
         self.private_dns_name = private_dns_name
         self.ip_address = ip_address
         self.private_ip_address = private_ip_address
+        self.user = user
         if job:
             self.add_job(job)
 
@@ -33,6 +34,7 @@ class Node():
             'private_dns_name': self.private_dns_name,
             'ip_address': self.ip_address,
             'private_ip_address': self.private_ip_address,
+            'user': self.user,
             'jobs': self.jobs
         }            
 
