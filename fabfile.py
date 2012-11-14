@@ -1,13 +1,13 @@
 from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
-from fabric.api import env, task, run, settings, sudo
+from fabric.api import env, task, run, settings, sudo, local
 from node import Node
-from jobs import *
+import jobs
 import time
 import json
 import pprint
-
+import sys
 
 @task
 def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', 
@@ -98,6 +98,7 @@ def listNodes():
 
 @task
 def addJob(name, job):
+    """ Give node a job """
     node = findNode(name)
     if job not in node['jobs']:
         node['jobs'].append(job)
@@ -106,11 +107,16 @@ def addJob(name, job):
     for job in node['jobs']:
         # Need to run ssh-add ~/.ssh/somekey.pem for the below to work
         # TODO - need to store login with node
-        with settings(host_string='%s@%s' % node['user'], node['ip_address'])):
-            # There's probably a nicer way to do this
-            jobrunner = globals()[job]()
-            jobrunner.run()
+        with settings(host_string='%s@%s' % (node['user'], node['ip_address'])):
+            # There has to be a nicer way to do this
+            if job == 'web':
+                jobs.web.run()
 
+@task
+def ssh(name):
+    """ Connect to a given node """
+    node = findNode(name)
+    local("ssh %s@%s" % (node['user'], node['ip_address']))
 
 #
 # Utility methods - move these to own modules later
@@ -125,6 +131,8 @@ def findNode(name):
     for node in config['nodes']:
         if node['name'] == name:
             return node
+    print "Node with name %s not found" % name
+    sys.exit()
 
 
 def loadConfig():
@@ -156,3 +164,4 @@ def updateConfig(name, node):
             nodes.append(n)
     config['nodes'] = nodes
     saveConfig(config)
+

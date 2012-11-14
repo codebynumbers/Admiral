@@ -1,6 +1,6 @@
 from fabric.api import run, sudo
 
-class Web():
+class web():
 
     packages = [
         'python-pip',
@@ -36,12 +36,12 @@ class Web():
     ]
 
     @staticmethod
-    def run(self):
+    def run():
         sudo('apt-get update')
         sudo('apt-get upgrade')
 
-        for package in Web.packages:
-            sudo('apt-get install %s' % package)
+        for package in web.packages:
+            sudo('apt-get install -y %s' % package)
 
-        for package in Web.pip_packages:
+        for package in web.pip_packages:
             sudo('pip install %s' % package)
