@@ -103,6 +103,7 @@ def addJob(name, job):
     if job not in node['jobs']:
         node['jobs'].append(job)
     updateConfig(name, node)
+    config = loadConfig()
 
     for job in node['jobs']:
         # Need to run ssh-add ~/.ssh/somekey.pem for the below to work
@@ -110,7 +111,7 @@ def addJob(name, job):
         with settings(host_string='%s@%s' % (node['user'], node['ip_address'])):
             # There has to be a nicer way to do this
             if job == 'web':
-                jobs.web.run()
+                jobs.web.run(config)
 
 @task
 def ssh(name):

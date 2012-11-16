@@ -1,4 +1,7 @@
-from fabric.api import run, sudo
+from fabric.api import run, sudo, put
+from jinja2 import Template, Environment, PackageLoader
+from tempfile NamedTemporaryFile
+import os
 
 class web():
 
@@ -14,15 +17,20 @@ class web():
         'boto'
     ]
 
-    # TODO - template out boto config etc
+    # TODO - template out things like boto config etc
     # fill template, put on file system, set owner and permissions
     files = [
-
+        {
+            "name":"somedomain.com",
+            "dest":"/etc/ngnix/sites-available/somedomain.com",
+            "owner":"root",
+            "group":"root",
+            "perms":"644"
+        }
     ]
 
     # Add these users
     users = [
-
     ]
 
     # Add these dirs
@@ -36,7 +44,10 @@ class web():
     ]
 
     @staticmethod
-    def run():
+    def run(config=None):
+        
+        # Will need to pass node data for templates etc
+
         sudo('apt-get update')
         sudo('apt-get upgrade')
 
@@ -45,3 +56,16 @@ class web():
 
         for package in web.pip_packages:
             sudo('pip install %s' % package)
+
+        env = Environment(loader=PackageLoader('Admiral', 'templates'))
+        for file in files:
+            template = env.get_template(file['name'])
+            rendered = template.render(config)
+            f = NamedTemporaryFile(delete=False)
+            f.write(rendered)
+            f.close()
+            put(f.name, file['dest'], use_sudo=True)
+            os.unlink(f.name)
+            sudo("chown %s.%s %" % (file['owner'], file['group'], file['dest']) 
+            sudo("chmod %s %s " % (file['perms'], file['dest']) 
+        
