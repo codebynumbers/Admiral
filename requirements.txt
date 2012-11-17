@@ -1,2 +1,3 @@
 boto
 fabric
+jinja2

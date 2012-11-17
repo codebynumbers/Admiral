@@ -1,6 +1,6 @@
 from fabric.api import run, sudo, put
 from jinja2 import Template, Environment, PackageLoader
-from tempfile NamedTemporaryFile
+from tempfile import NamedTemporaryFile
 import os
 
 class web():
@@ -66,6 +66,6 @@ class web():
             f.close()
             put(f.name, file['dest'], use_sudo=True)
             os.unlink(f.name)
-            sudo("chown %s.%s %" % (file['owner'], file['group'], file['dest']) 
-            sudo("chmod %s %s " % (file['perms'], file['dest']) 
+            sudo("chown %s.%s %" % (file['owner'], file['group'], file['dest']))
+            sudo("chmod %s %s" % (file['perms'], file['dest']))
         
