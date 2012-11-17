@@ -47,8 +47,8 @@ def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2
                 instance.ip_address, instance.private_ip_address, user, job)
     
         pprint.pprint(n.to_dict())
-        addNode(n)
-    
+        addNode(n)    
+
     else:
         print('Instance status: ' + status)
         return
@@ -122,10 +122,13 @@ def ssh(name):
 #
 # Utility methods - move these to own modules later
 #
+
+# Abstract config into class that auto-saves
+
 def addNode(node):
     config = loadConfig()
     config['nodes'].append(node.to_dict())
-    
+    saveConfig(config)    
 
 def findNode(name):
     config = loadConfig()

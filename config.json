@@ -1,18 +1,16 @@
 {
     "nodes": [
         {
-            "dns_name": "ec2-54-242-220-175.compute-1.amazonaws.com", 
-            "id": "i-ae38f6d1", 
+            "dns_name": "ec2-54-242-164-68.compute-1.amazonaws.com", 
+            "id": "i-2bb40654", 
             "image_id": "ami-3d4ff254", 
             "instance_type": "t1.micro", 
-            "ip_address": "54.242.220.175", 
-            "jobs": [
-                "web"
-            ], 
+            "ip_address": "54.242.164.68", 
+            "jobs": [], 
             "key_name": "amazon2", 
-            "name": "web1", 
-            "private_dns_name": "ip-10-29-215-20.ec2.internal", 
-            "private_ip_address": "10.29.215.20", 
+            "name": "web04", 
+            "private_dns_name": "ip-10-158-57-88.ec2.internal", 
+            "private_ip_address": "10.158.57.88", 
             "user": "ubuntu", 
             "zone": "us-east-1d"
         }
