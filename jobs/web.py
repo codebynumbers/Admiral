@@ -1,5 +1,5 @@
 from fabric.api import run, sudo, put
-from jinja2 import Template, Environment, PackageLoader
+from jinja2 import Template, Environment, FileSystemLoader
 from tempfile import NamedTemporaryFile
 import os
 
@@ -22,11 +22,15 @@ class web():
     files = [
         {
             "name":"somedomain.com",
-            "dest":"/etc/ngnix/sites-available/somedomain.com",
+            "dest":"/etc/nginx/sites-available/somedomain.com",
             "owner":"root",
             "group":"root",
             "perms":"644"
         }
+    ]
+
+    # Create these links
+    links = [
     ]
 
     # Add these users
@@ -35,12 +39,10 @@ class web():
 
     # Add these dirs
     dirs = [
-
     ]    
     
     # Run these commands
     cmds = [
-
     ]
 
     @staticmethod
@@ -57,8 +59,9 @@ class web():
         for package in web.pip_packages:
             sudo('pip install %s' % package)
 
-        env = Environment(loader=PackageLoader('Admiral', 'templates'))
-        for file in files:
+        cwd = os.path.dirname( __file__ )
+        env = Environment(loader = FileSystemLoader('%s/../templates/web' % cwd))
+        for file in web.files:
             template = env.get_template(file['name'])
             rendered = template.render(config)
             f = NamedTemporaryFile(delete=False)
@@ -66,6 +69,6 @@ class web():
             f.close()
             put(f.name, file['dest'], use_sudo=True)
             os.unlink(f.name)
-            sudo("chown %s.%s %" % (file['owner'], file['group'], file['dest']))
+            sudo("chown %s.%s %s" % (file['owner'], file['group'], file['dest']))
             sudo("chmod %s %s" % (file['perms'], file['dest']))
         
