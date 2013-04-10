@@ -1,9 +1,6 @@
-from fabric.api import run, sudo, put
-from jinja2 import Template, Environment, FileSystemLoader
-from tempfile import NamedTemporaryFile
-import os
+from job import Job
 
-class web():
+class web(Job):
 
     packages = [
         'python-pip',
@@ -45,30 +42,3 @@ class web():
     cmds = [
     ]
 
-    @staticmethod
-    def run(config=None):
-        
-        # Will need to pass node data for templates etc
-
-        sudo('apt-get update')
-        sudo('apt-get upgrade')
-
-        for package in web.packages:
-            sudo('apt-get install -y %s' % package)
-
-        for package in web.pip_packages:
-            sudo('pip install %s' % package)
-
-        cwd = os.path.dirname( __file__ )
-        env = Environment(loader = FileSystemLoader('%s/../templates/web' % cwd))
-        for file in web.files:
-            template = env.get_template(file['name'])
-            rendered = template.render(config)
-            f = NamedTemporaryFile(delete=False)
-            f.write(rendered)
-            f.close()
-            put(f.name, file['dest'], use_sudo=True)
-            os.unlink(f.name)
-            sudo("chown %s.%s %s" % (file['owner'], file['group'], file['dest']))
-            sudo("chmod %s %s" % (file['perms'], file['dest']))
-        

@@ -47,8 +47,14 @@ def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2
                 instance.ip_address, instance.private_ip_address, user, job)
     
         pprint.pprint(n.to_dict())
-        addNode(n)    
-
+        addNode(n)
+    
+        job_status = addJob(name, job)
+        while job_status == 'pending': 
+            time.sleep(5)
+            job_status = addJob(name, job)
+            if job_status == 'complete':
+                print 'Job init complete'
     else:
         print('Instance status: ' + status)
         return
@@ -82,7 +88,7 @@ def mockLaunch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='ama
 
 
 @task
-def listNodes():
+def list():
     """ List configured nodes """
     config = {}
     try:
@@ -105,13 +111,19 @@ def addJob(name, job):
     updateConfig(name, node)
     config = loadConfig()
 
-    for job in node['jobs']:
-        # Need to run ssh-add ~/.ssh/somekey.pem for the below to work
-        # TODO - need to store login with node
-        with settings(host_string='%s@%s' % (node['user'], node['ip_address'])):
-            # There has to be a nicer way to do this
-            if job == 'web':
-                jobs.web.run(config)
+    try:
+        for job in node['jobs']:
+            # Need to run ssh-add ~/.ssh/somekey.pem for the below to work
+            # TODO - need to store login with node
+            with settings(host_string='%s@%s' % (node['user'], node['ip_address'])):
+                # TODO - git list of jobs from jobs dir
+                if job == 'web':
+                    j = jobs.web()
+                    j.run(config)
+    except Exception as e:
+        print e
+        return 'pending'
+    return 'complete'
 
 @task
 def ssh(name):
