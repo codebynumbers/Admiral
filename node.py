@@ -18,6 +18,10 @@ class Node(object):
         self.user = kwargs['user']
         if kwargs.get('job'):
             self.add_job(kwargs['job'])
+        elif kwargs.get('jobs'):
+            self.jobs = kwargs['jobs']
+        # Parse reference
+        self.object_id = kwargs.get('objectId')
 
     def to_dict(self):
         return {

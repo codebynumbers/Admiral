@@ -39,6 +39,9 @@ class ParseClient(object):
 
     @classmethod
     def update_node(cls, name, data):
-        res = requests.put("https://api.parse.com/1/classes/Node", data=json.dumps(data), headers=cls.headers)
+        node = cls.get_node(name)
+        if node:
+            res = requests.put("https://api.parse.com/1/classes/Node/%s" % node.object_id, data=json.dumps(data), headers=cls.headers)
+            import pprint;pprint.pprint(res)
         return True if res.status_code == 201 else False
 

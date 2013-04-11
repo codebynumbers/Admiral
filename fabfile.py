@@ -105,19 +105,19 @@ def list():
 @task
 def addJob(name, job):
     """ Give node a job """
-    node = findNode(name)
-    if job not in node['jobs']:
-        node['jobs'].append(job)
+    node = ParseClient.get_node(name)
+    if job not in node.jobs:
+        node.jobs.append(job)
 
-    if ParseClient.update_node(name, node):
+    if ParseClient.update_node(name, node.to_dict()):
         print "Node updated on remote"
 
     try:
-        for job in node['jobs']:
+        for job in node.jobs:
             # Need to run ssh-add ~/.ssh/somekey.pem for the below to work
             # TODO - need to store login with node
             with settings(host_string='%s@%s' % (node['user'], node['ip_address'])):
-                # TODO - git list of jobs from jobs dir
+                    # TODO - git list of jobs from jobs dir
                 if job == 'web':
                     j = jobs.web()
                     j.run(config)
