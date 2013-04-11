@@ -1,3 +1,4 @@
 boto
 fabric
 jinja2
+requests

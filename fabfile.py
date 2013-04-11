@@ -3,6 +3,7 @@ from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
 from fabric.api import env, task, run, settings, sudo, local
 from node import Node
+from parse_client import ParseClient
 import jobs
 import time
 import json
@@ -45,9 +46,12 @@ def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2
         n = Node(name, instance.id, instance.image_id, instance.key_name, instance.placement,
                 instance.instance_type, instance.dns_name, instance.private_dns_name,
                 instance.ip_address, instance.private_ip_address, user, job)
-    
-        pprint.pprint(n.to_dict())
-        addNode(n)
+
+        if ParseClient.add_node(n.to_dict()):
+            print "Node stored on remote"
+            pprint.pprint(n.to_dict())
+        else:
+            print "Node storage failed on remote"
     
         job_status = addJob(name, job)
         while job_status == 'pending': 
@@ -60,7 +64,8 @@ def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2
         return
 
 @task
-def mockLaunch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', zone='us-east-1d', security_group='quicklaunch-1', job=None):
+def mockLaunch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', 
+           zone='us-east-1d', security_group='quicklaunch-1', user='ubuntu', job=None):
     """ Simulate a node launch for dev purposes """
 
     i = {
@@ -71,35 +76,30 @@ def mockLaunch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='ama
          'private_dns_name': u'ip-10-29-6-45.ec2.internal',
          'id': u'i-e2a5559d',
          'image_id': ami,
-         'placement': zone,
+         'zone': zone,
          'dns_name': u'ec2-107-21-159-143.compute-1.amazonaws.com',
          'instance_type': instance_type,
          'private_ip_address': u'10.29.6.45',
          'user':user,
-         'jobs':job
+         'job':job
         }
 
-    n = Node(i['name'], i['id'], i['image_id'], i['key_name'], i['placement'],
-            i['instance_type'], i['dns_name'], i['private_dns_name'],
-            i['ip_address'], i['private_ip_address'], i['user'], job)
-
-    pprint.pprint(n.to_dict())
-    addNode(n)
-
+    n = Node(**i)
+    try:
+        if ParseClient.add_node(n.to_dict()):
+            print "Node stored on remote"
+            pprint.pprint(n.to_dict())
+        else:
+            print "Node storage failed on remote"
+    except Exception as e:
+        print "Error: %s" % e
 
 @task
 def list():
     """ List configured nodes """
-    config = {}
-    try:
-        fh = open('config.json','r')
-        config = json.loads(fh.read())
-        fh.close()
-    except:
-        config['nodes'] = []
-
-    for node in config['nodes']:
-        print node['name'], node['ip_address'], node['jobs']    
+    ParseClient.all_nodes()
+    for node in ParseClient.all_nodes():
+        print node.name, node.ip_address, node.jobs    
 
 
 @task
@@ -108,8 +108,9 @@ def addJob(name, job):
     node = findNode(name)
     if job not in node['jobs']:
         node['jobs'].append(job)
-    updateConfig(name, node)
-    config = loadConfig()
+
+    if ParseClient.update_node(name, node):
+        print "Node updated on remote"
 
     try:
         for job in node['jobs']:
@@ -121,63 +122,11 @@ def addJob(name, job):
                     j = jobs.web()
                     j.run(config)
     except Exception as e:
-        print e
         return 'pending'
     return 'complete'
 
 @task
 def ssh(name):
     """ Connect to a given node """
-    node = findNode(name)
-    local("ssh %s@%s" % (node['user'], node['ip_address']))
-
-#
-# Utility methods - move these to own modules later
-#
-
-# Abstract config into class that auto-saves
-
-def addNode(node):
-    config = loadConfig()
-    config['nodes'].append(node.to_dict())
-    saveConfig(config)    
-
-def findNode(name):
-    config = loadConfig()
-    for node in config['nodes']:
-        if node['name'] == name:
-            return node
-    print "Node with name %s not found" % name
-    sys.exit()
-
-
-def loadConfig():
-    config = {}
-    try:
-        fh = open('config.json','r')
-        config = json.loads(fh.read())
-        fh.close()
-    except:
-        config['nodes'] = []
-    return config
-
-
-def saveConfig(config):
-    fh = open('config.json','w')
-    blob = json.dumps(config, sort_keys=True, indent=4)
-    fh.write(blob)
-    fh.close()
-
-
-# this is dumb, I already want a better data structure, keyed by name or id
-def updateConfig(name, node):
-    config = loadConfig()
-    nodes = []
-    for n in config['nodes']:
-        if n['name'] == name:
-            nodes.append(node)
-        else:
-            nodes.append(n)
-    config['nodes'] = nodes
-    saveConfig(config)
-
+    node = ParseClient.get_node(name)
+    local("ssh %s@%s" % (node.user, node.ip_address))

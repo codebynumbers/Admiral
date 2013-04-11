@@ -1,26 +1,23 @@
-class Node():
+class Node(object):
     """ Object representing an EC2 node """
 
     # list of job names
     jobs = []
 
-    def __init__(self, name, id, image_id, key_name, zone,
-            instance_type, dns_name, private_dns_name,
-            ip_address, private_ip_address, user, job=None):
-
-        self.name = name
-        self.id = id
-        self.image_id = image_id
-        self.key_name = key_name
-        self.zone = zone
-        self.instance_type = instance_type
-        self.dns_name = dns_name
-        self.private_dns_name = private_dns_name
-        self.ip_address = ip_address
-        self.private_ip_address = private_ip_address
-        self.user = user
-        if job:
-            self.add_job(job)
+    def __init__(self, **kwargs):
+        self.name = kwargs['name']
+        self.id = kwargs['id']
+        self.image_id = kwargs['image_id']
+        self.key_name = kwargs['key_name']
+        self.zone = kwargs['zone']
+        self.instance_type = kwargs['instance_type']
+        self.dns_name = kwargs['dns_name']
+        self.private_dns_name = kwargs['private_dns_name']
+        self.ip_address = kwargs['ip_address']
+        self.private_ip_address = kwargs['private_ip_address']
+        self.user = kwargs['user']
+        if kwargs.get('job'):
+            self.add_job(kwargs['job'])
 
     def to_dict(self):
         return {
