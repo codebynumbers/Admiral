@@ -1,12 +1,14 @@
+import time
+import jobs
+import pprint
+
 from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
 from fabric.api import env, task, run, settings, sudo, local
+
 from parse_client import ParseClient
 from job import Job
-import time
-import jobs
-import pprint
 
 class Node(object):
     """ Object representing an EC2 node """

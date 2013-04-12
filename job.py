@@ -1,7 +1,8 @@
+import os
+
 from fabric.api import run, sudo, put
 from jinja2 import Template, Environment, FileSystemLoader
 from tempfile import NamedTemporaryFile
-import os
 
 class Job(object):
 

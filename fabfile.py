@@ -1,11 +1,13 @@
-
-from fabric.api import env, task, run, settings, sudo, local
-from node import Node
-from parse_client import ParseClient
 import time
 import json
 import pprint
 import sys
+
+from fabric.api import env, task, run, settings, sudo, local
+
+from node import Node
+from parse_client import ParseClient
+
 
 @task
 def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', 
