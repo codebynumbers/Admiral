@@ -2,6 +2,8 @@ from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
 from fabric.api import env, task, run, settings, sudo, local
+from parse_client import ParseClient
+from job import Job
 import time
 import jobs
 import pprint
@@ -103,6 +105,11 @@ class Node(object):
 
     def refresh_jobs(self):
         """ Run all jobs """
+        with settings(host_string='%s@%s' % (self.user, self.ip_address)):
+            # Run init from Base job class, once per run
+            job_obj = Job()
+            job_obj.init() 
+
         for job in self.jobs:
             self.run_single_job(job)
 
@@ -112,10 +119,8 @@ class Node(object):
             'nodes': ParseClient.all_nodes()
         }
         with settings(host_string='%s@%s' % (self.user, self.ip_address)):
-            # TODO - git list of possible jobs from jobs dir
-            if job == 'web':
-                j = jobs.web()
-                j.run(template_vars) 
+            job_obj = self.get_job_module(job)
+            job_obj.run(template_vars) 
 
     def terminate(self):
         ''' Terminate this instance '''
@@ -149,6 +154,18 @@ class Node(object):
             print "Node stored on remote"
         else:
             print "Node storage failed on remote"
+
+    def get_job_module(self, job):
+        obj = self.get_class("jobs.%s" % job)
+        return obj
+
+    @staticmethod
+    def get_class(kls):
+        """ Source: http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname """
+        parts = kls.split('.')
+        module = ".".join(parts[:-1])
+        m = __import__( module )
+        for comp in parts[1:]:
+            m = getattr(m, comp)
+        return m
  
-# Circular import hack         
-from parse_client import ParseClient

@@ -1,7 +1,7 @@
 import requests
 import json
 import urllib
-from node import Node
+import node
 from config import config
 
 class ParseClient(object):
@@ -26,7 +26,7 @@ class ParseClient(object):
         content = json.loads(res.content)
         if len(content['results']) == 0:
             return None
-        return Node(**content['results'][0])
+        return node.Node(**content['results'][0])
 
     @classmethod
     def delete_node(cls, name):
@@ -51,4 +51,4 @@ class ParseClient(object):
         content = json.loads(res.content)
         if len(content['results']) == 0:
             return []
-        return [Node(**n) for n in content['results']]
+        return [node.Node(**n) for n in content['results']]

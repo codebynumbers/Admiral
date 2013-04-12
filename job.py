@@ -5,13 +5,13 @@ import os
 
 class Job(object):
 
-    # Instll these packages
+    # Install these packages
     packages = []
 
     # Install these pip packages
     pip_packages = []
 
-    # install templated files
+    # Install templated files
     files = []
 
     # Create these links
@@ -26,13 +26,13 @@ class Job(object):
     # Run these commands
     cmds = []
 
-    def run(self, template_vars={}):
-        
-        # Will need to pass node data for templates etc
-
+    def init(self):
         sudo('apt-get update')
         sudo('apt-get upgrade -y')
 
+    def run(self, template_vars={}):
+        
+        # Will need to pass node data for templates etc
         for package in self.packages:
             sudo('apt-get install -y %s' % package)
 
