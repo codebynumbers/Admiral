@@ -26,12 +26,12 @@ class Job(object):
     # Run these commands
     cmds = []
 
-    def run(self, config=None):
+    def run(self, template_vars={}):
         
         # Will need to pass node data for templates etc
 
         sudo('apt-get update')
-        sudo('apt-get upgrade')
+        sudo('apt-get upgrade -y')
 
         for package in self.packages:
             sudo('apt-get install -y %s' % package)
@@ -43,7 +43,7 @@ class Job(object):
         env = Environment(loader = FileSystemLoader('%s/templates/%s' % (cwd, self.__class__.__name__ )))
         for file in self.files:
             template = env.get_template(file['name'])
-            rendered = template.render(config)
+            rendered = template.render(template_vars)
             f = NamedTemporaryFile(delete=False)
             f.write(rendered)
             f.close()
