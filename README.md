@@ -13,8 +13,8 @@ and Parse or similar service for storing fleet configuration.
 
 Terminolgy
 -----
-Node - an AWS EC2 Ubuntu instance
-Job - Like a chef role, but didn't want to confuse with fabric roles, nodes can have multiple jobs, Job class files define how to setup a node for a particular job
+- Node - an AWS EC2 Ubuntu instance
+- Job - Like a chef role, but didn't want to confuse with fabric roles, nodes can have multiple jobs, Job class files define how to setup a node for a particular job
 
 Getting Started Example
 -----------------------
