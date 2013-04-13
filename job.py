@@ -22,10 +22,12 @@ class Job(object):
     cmds = []
 
     def update_packages(self):
+        sudo('echo "Running apt-get update on `hostname`"')
         sudo('apt-get update')
         sudo('apt-get upgrade -y')
 
     def run(self, template_vars={}):
+        sudo('echo "Running jobs on `hostname`"')
         
         # Will need to pass node data for templates etc
         for package in self.packages:
