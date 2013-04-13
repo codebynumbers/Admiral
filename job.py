@@ -8,22 +8,16 @@ class Job(object):
 
     # Install these packages
     packages = []
-
     # Install these pip packages
     pip_packages = []
-
     # Install templated files
     files = []
-
     # Create these links
     links = []
-
     # Add these users
     users = []
-
     # Add these dirs
     dirs = []    
-    
     # Run these commands
     cmds = []
 

@@ -40,6 +40,9 @@ class Node(object):
         # Parse reference
         self.object_id = kwargs.get('objectId')
 
+        # Experimenting
+        self.ebs = False
+
     def to_dict(self):
         return {
             'name': self.name,
@@ -61,15 +64,17 @@ class Node(object):
         conn = EC2Connection()
         # Declare the block device mapping for ephemeral disks
 
-        # TODO - toggle instance storage
-        mapping = BlockDeviceMapping()
-        eph0 = BlockDeviceType()
-        eph1 = BlockDeviceType()
-        eph0.ephemeral_name = 'ephemeral0'
-        eph1.ephemeral_name = 'ephemeral1'
-        mapping['/dev/sdb'] = eph0
-        mapping['/dev/sdc'] = eph1
-
+        mapping = None
+        if self.ebs:
+            # TODO - toggle instance storage
+            mapping = BlockDeviceMapping()
+            eph0 = BlockDeviceType()
+            eph1 = BlockDeviceType()
+            eph0.ephemeral_name = 'ephemeral0'
+            eph1.ephemeral_name = 'ephemeral1'
+            mapping['/dev/sdb'] = eph0
+            mapping['/dev/sdc'] = eph1
+        
         # Now, ask for a reservation
         reservation = conn.run_instances(self.ami, instance_type=self.instance_type, 
                                          key_name=self.key_name, placement=self.zone, 
@@ -81,10 +86,16 @@ class Node(object):
         instance = reservation.instances[0]
         print('Waiting for instance to start...')
         # Check up on its status every so often
-        status = instance.update()
+        try:
+            status = instance.update()
+        except:
+            pass
         while status == 'pending':
             time.sleep(5)
-            status = instance.update()
+            try:
+                status = instance.update()
+            except:
+                pass
         if status == 'running':
             print('New instance "' + instance.id + '" accessible at ' + instance.public_dns_name)
             # Name the instance
@@ -99,11 +110,27 @@ class Node(object):
 
             ParseClient.add_node(self.to_dict())
 
-            self.refresh_jobs()
+            if self.try_connect():
+                self.refresh_jobs()
+
             return True
         else:
             print('Instance status: ' + status)
             return False
+
+    def try_connect(self):
+        tries = 0
+        while True:
+            try:
+                tries += 1
+                with settings(host_string='%s@%s' % (self.user, self.ip_address)):
+                    sudo("hostname")
+                return True
+            except:
+                time.sleep(5)
+                if tries >= 10:
+                    print "Unable to connect after %d tries" % tries
+                    return False
 
     def refresh_jobs(self):
         """ Run all jobs """
@@ -111,10 +138,9 @@ class Node(object):
             # Run init from Base job class, once per run
             job_obj = Job()
             job_obj.update_packages() 
-
-        for job in self.jobs:
-            self.run_single_job(job)
-
+            # Run all nodes jobs
+            for job in self.jobs:
+                self.run_single_job(job)
 
     def run_single_job(self, job):
         template_vars = {
