@@ -27,7 +27,7 @@ class Job(object):
     # Run these commands
     cmds = []
 
-    def init(self):
+    def update_packages(self):
         sudo('apt-get update')
         sudo('apt-get upgrade -y')
 

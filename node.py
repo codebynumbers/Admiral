@@ -110,7 +110,7 @@ class Node(object):
         with settings(host_string='%s@%s' % (self.user, self.ip_address)):
             # Run init from Base job class, once per run
             job_obj = Job()
-            job_obj.init() 
+            job_obj.update_packages() 
 
         for job in self.jobs:
             self.run_single_job(job)
@@ -159,7 +159,7 @@ class Node(object):
 
     def get_job_module(self, job):
         obj = self.get_class("jobs.%s" % job)
-        return obj
+        return obj()
 
     @staticmethod
     def get_class(kls):

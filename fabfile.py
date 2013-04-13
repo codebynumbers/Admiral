@@ -10,7 +10,7 @@ from parse_client import ParseClient
 
 
 @task
-def launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='amazon2', 
+def launch(name, ami='ami-762d491f', instance_type='t1.micro', key_name='amazon2', 
            zone='us-east-1d', security_group='quicklaunch-1', user='ubuntu', job=None):
     """ Launch a node """
     node = Node(name=name, ami=ami, instance_type=instance_type, key_name=key_name, 
@@ -56,6 +56,7 @@ def add_job(name, job):
     node = ParseClient.get_node(name)
     if job not in node.jobs:
         node.jobs.append(job)
+    ParseClient.update_node(name, node.to_dict())
     node.refresh_jobs()
 
 @task
