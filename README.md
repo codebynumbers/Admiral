@@ -52,7 +52,5 @@ The web job is just a python class that can be customized to install packages, t
 ```
 
 ### To Do
-- Provide option to not use EBS
-- Dynamically choose right class for job, ie not hardcoded
+- Provide option to not use EBS, (EBS currently disabled)
 - Add a couple more sample jobs
-- Fix circular import
