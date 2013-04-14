@@ -1,14 +1,11 @@
 import time
-import jobs
-import pprint
-
 from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceType
 from boto.ec2.blockdevicemapping import BlockDeviceMapping
-from fabric.api import env, task, run, settings, sudo, local
-
+from fabric.api import settings, sudo
 from parse_client import ParseClient
 from job import Job
+
 
 class Node(object):
     """ Object representing an EC2 node """
@@ -17,6 +14,7 @@ class Node(object):
     jobs = []
 
     def __init__(self, **kwargs):
+        """ new Node """
         self.name = kwargs['name']
         self.key_name = kwargs.get('key_name')
         self.zone = kwargs.get('zone')
@@ -43,7 +41,9 @@ class Node(object):
         # Experimenting
         self.ebs = False
 
+
     def to_dict(self):
+        """ Return dictoionary reprenstation of object """
         return {
             'name': self.name,
             'instance_id': self.instance_id,
@@ -58,6 +58,7 @@ class Node(object):
             'user': self.user,
             'jobs': self.jobs
         }            
+
 
     def launch(self):
         '''Launch a single instance of the provided ami '''
@@ -118,7 +119,9 @@ class Node(object):
             print('Instance status: ' + status)
             return False
 
+
     def try_connect(self):
+        """ Test SSH connection in a rety loop """
         tries = 0
         while True:
             try:
@@ -132,6 +135,7 @@ class Node(object):
                     print "Unable to connect after %d tries" % tries
                     return False
 
+
     def refresh_jobs(self):
         """ Run all jobs """
         with settings(host_string='%s@%s' % (self.user, self.ip_address)):
@@ -142,13 +146,16 @@ class Node(object):
             for job in self.jobs:
                 self.run_single_job(job)
 
+
     def run_single_job(self, job):
+        """ Connect to box and run job """
         template_vars = {
-            'nodes': ParseClient.all_nodes()
+            'nodes': ParseClient.get_all_nodes()
         }
         with settings(host_string='%s@%s' % (self.user, self.ip_address)):
             job_obj = self.get_job_module(job)
             job_obj.run(template_vars) 
+
 
     def terminate(self):
         ''' Terminate this instance '''
@@ -157,7 +164,7 @@ class Node(object):
             conn.terminate_instances([self.instance_id])
         except:
             pass
-        ParseClient.delete_node(self.name)
+        ParseClient.delete_node(self.object_id)
 
 
     def mock_launch(self):
@@ -169,7 +176,7 @@ class Node(object):
              'zone': self.zone,
              'instance_type': self.instance_type,
              'user':self.user,
-             'job':self.jobs,
+             'jobs':self.jobs,
              'public_dns_name': u'ec2-107-21-159-143.compute-1.amazonaws.com',
              'ip_address': u'107.21.159.143',
              'private_dns_name': u'ip-10-29-6-45.ec2.internal',
@@ -183,17 +190,42 @@ class Node(object):
         else:
             print "Node storage failed on remote"
 
+
     def get_job_module(self, job):
+        """ Helper to get hob object dynamically """
         obj = self.get_class("jobs.%s" % job)
         return obj()
+
 
     @staticmethod
     def get_class(kls):
         """ Source: http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname """
         parts = kls.split('.')
         module = ".".join(parts[:-1])
-        m = __import__( module )
+        mod = __import__( module )
         for comp in parts[1:]:
-            m = getattr(m, comp)
-        return m
- 
+            mod = getattr(mod, comp)
+        return mod
+
+
+    def add_job(self, job):
+        """ Add a job to node, update node on remote """
+        if job not in self.jobs:
+            self.jobs.append(job)
+        ParseClient.update_node(self.object_id, self.to_dict())
+
+
+    @staticmethod 
+    def get_node(name):
+        """ Retrive node from remote, return Node object """
+        result = ParseClient.get_node(name)
+        return result if result is None else Node(**result)
+
+
+    @staticmethod 
+    def get_all_nodes():
+        """ Retrieve an array of Node objects """
+        result = ParseClient.get_all_nodes()
+        return [Node(**n) for n in result]
+
+

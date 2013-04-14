@@ -1,10 +1,12 @@
 import os
 
-from fabric.api import run, sudo, put
-from jinja2 import Template, Environment, FileSystemLoader
+from fabric.api import sudo, put
+from jinja2 import Environment, FileSystemLoader
 from tempfile import NamedTemporaryFile
 
+
 class Job(object):
+    """ Base class for do things on an instance """
 
     # Install these packages
     packages = []
@@ -22,11 +24,14 @@ class Job(object):
     cmds = []
 
     def update_packages(self):
+        """ Update packages once per run """
         sudo('echo "Running apt-get update on `hostname`"')
         sudo('apt-get update')
         sudo('apt-get upgrade -y')
 
-    def run(self, template_vars={}):
+
+    def run(self, template_vars=None):
+        """ Kick off jobs """
         sudo('echo "Running jobs on `hostname`"')
         
         # Will need to pass node data for templates etc

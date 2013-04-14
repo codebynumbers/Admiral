@@ -1,12 +1,6 @@
-import time
-import json
 import pprint
-import sys
-
-from fabric.api import env, task, run, settings, sudo, local
-
+from fabric.api import task, local
 from node import Node
-from parse_client import ParseClient
 
 
 @task
@@ -29,7 +23,7 @@ def mock_launch(name, ami='ami-3d4ff254', instance_type='t1.micro', key_name='am
 @task
 def terminate(name):
     """ Terminate a node and remove from remote """
-    node = ParseClient.get_node(name)
+    node = Node.get_node(name)
     if node:
         node.terminate()
     else:
@@ -38,35 +32,36 @@ def terminate(name):
 @task
 def list():
     """ List configured nodes """
-    ParseClient.all_nodes()
-    for node in ParseClient.all_nodes():
+    for node in Node.get_all_nodes():
         print node.name, node.ip_address, node.jobs    
 
 @task
 def show(name):
     """ List configured nodes """
-    node = ParseClient.get_node(name)
+    node = Node.get_node(name)
     if node:
         pprint.pprint(node.to_dict()) 
     else:
         print "Not Found"
+
+
 @task
 def add_job(name, job):
     """ Give an existing node a job """
-    node = ParseClient.get_node(name)
-    if job not in node.jobs:
-        node.jobs.append(job)
-    ParseClient.update_node(name, node.to_dict())
+    node = Node.get_node(name)
+    node.add_job(job)
     node.refresh_jobs()
+
 
 @task
 def update(name):
     """ Update node config """
-    node = ParseClient.get_node(name)    
+    node = Node.get_node(name)    
     node.refresh_jobs()
+
 
 @task
 def ssh(name):
     """ Connect to a given node """
-    node = ParseClient.get_node(name)
+    node = Node.get_node(name)
     local("ssh %s@%s" % (node.user, node.ip_address))
